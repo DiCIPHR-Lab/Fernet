@@ -1,0 +1,76 @@
+Bootstrap: localimage
+From: /cbica/home/annavazs/ubuntu_20.04.sif
+
+%labels
+    Author Sai Krishna Chaitanya Annavazala
+    Description FERNET with Python packages and ANTs N4BiasFieldCorrection
+
+%files
+    /cbica/home/annavazs/temp/Fernet /opt/
+
+%environment
+    export PATH=/opt/ants/bin:$PATH
+    export PYTHONNOUSERSITE=1
+    export LC_ALL=C.UTF-8
+    export LANG=C.UTF-8
+    export PYTHONPATH=/opt/Fernet:$PYTHONPATH
+
+%post
+    export DEBIAN_FRONTEND=noninteractive
+
+    apt-get update && apt-get install -y \
+        python3 \
+        python3-pip \
+        python3-dev \
+        git \
+        wget \
+        unzip \
+        build-essential \
+        libgl1-mesa-glx \
+        libglib2.0-0 \
+        libgomp1 
+
+    rm -rf /var/lib/apt/lists/*
+
+    python3 -m pip install --upgrade pip setuptools wheel
+
+    python3 -m pip install \
+        numpy \
+        scipy \
+        nibabel \
+        pandas \
+        scikit-learn \
+        dipy
+
+    mkdir -p /opt/ants
+    cd /opt
+    wget https://github.com/ANTsX/ANTs/releases/download/v2.6.5/ants-2.6.5-ubuntu18.04-X64-gcc.zip
+    unzip ants-2.6.5-ubuntu18.04-X64-gcc.zip
+    mv ants-2.6.5/bin /opt/ants/bin
+    rm -rf ants-2.6.5/ ants-2.6.5-ubuntu18.04-X64-gcc.zip
+
+    cd /opt/Fernet
+
+%runscript
+    export PYTHONPATH=/opt/Fernet:$PYTHONPATH
+    cd /opt/Fernet
+    OPTS=""
+
+    while getopts "d:o:m:r:b:w:c:x:n:BG" opt; do
+        case "$opt" in
+            d) OPTS="$OPTS -d $OPTARG" ;;
+            o) OPTS="$OPTS -o $OPTARG" ;;
+            m) OPTS="$OPTS -m $OPTARG" ;;
+            r) OPTS="$OPTS -r $OPTARG" ;;
+            b) OPTS="$OPTS -b $OPTARG" ;;
+            w) OPTS="$OPTS -w $OPTARG" ;;
+            c) OPTS="$OPTS -c $OPTARG" ;;
+            x) OPTS="$OPTS -x $OPTARG" ;;
+            n) OPTS="$OPTS -n $OPTARG" ;;
+            B) OPTS="$OPTS -B" ;;
+            G) OPTS="$OPTS -G" ;;
+            *) echo "Invalid option: -$OPTARG" >&2; exit 1 ;;
+        esac
+    done
+
+    exec python3 /opt/Fernet/scripts/fernet.py $OPTS
