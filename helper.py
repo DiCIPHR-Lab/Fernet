@@ -797,7 +797,7 @@ def n4_bias_correct_dwi(dwi_img, bvals, bvecs, field=False, mask_img=None, weigh
         percHigh = np.percentile(b0_data[b0_data>0],99.5)
         b0_winsor = b0_data.copy()
         b0_winsor[b0_winsor < percLow] = percLow
-        b0_winsor[b0_winsor < percHigh] = percHigh
+        b0_winsor[b0_winsor > percHigh] = percHigh
         write_nifti(b0_filename, nifti_image(b0_winsor, b0_im.affine))
         cmd = [ 'N4BiasFieldCorrection', '-d', '3', '-i', b0_filename,
                 '-r', '-b', str(bspline),'-c', str(convergence), '-v', '1',
